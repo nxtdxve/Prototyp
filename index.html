@@ -17,7 +17,7 @@
         }
 
         .selected {
-            background-color: rgba(0, 123, 255, 0.15);
+            background-color: rgba(255, 30, 0, 0.582);
         }
 
         table {
@@ -110,12 +110,16 @@
 
 
     <script>
+        // Global variables
+        let editMode = false;
+        let selectedAbsenceIndex;
         // Sample student data
         const students = [
             {
                 id: 1,
                 image: "default-profile-picture.png",
                 name: "Max Mustermann",
+                email: "mustermannm@bzz.ch",
                 grade: "10A",
                 absences: [
                     {
@@ -136,6 +140,7 @@
                 id: 2,
                 image: "default-profile-picture.png",
                 name: "Anna Musterfrau",
+                email: "musterfraua@bzz.ch",
                 grade: "10A",
                 absences: [
                     {
@@ -225,6 +230,7 @@
                 <img src="${student.image}" class="student-image me-3">
                 <div>
                     <h5>${student.name}</h5>
+                    <p>${student.email}</p>
                     <p>${student.grade}</p>
                 </div>
             `;
@@ -241,6 +247,7 @@
                     <td>${absence.reason}</td>
                 `;
                 absencesTable.appendChild(tr);
+
             });
 
             displayAbsences(student.absences);
@@ -265,19 +272,34 @@
             const addAbsenceButton = document.getElementById("add-absence-button");
             addAbsenceButton.addEventListener("click", () => {
                 addAbsence(currentStudent);
+                console.log("Add absence button clicked")
             });
 
             const editAbsenceButton = document.getElementById("edit-absence-button");
             editAbsenceButton.addEventListener("click", () => {
-                // Edit absence functionality
+                editMode = true;
+                const rows = document.querySelectorAll("#absences-table tr");
+                rows.forEach((row, index) => {
+                editAbsence(currentStudent, row, currentStudent.absences[index], index);
+                });
                 console.log("Edit absence button clicked");
             });
 
             const deleteAbsenceButton = document.getElementById("delete-absence-button");
-            deleteAbsenceButton.addEventListener("click", () => {
-                // Delete absence functionality
-                console.log("Delete absence button clicked");
-            });
+deleteAbsenceButton.addEventListener("click", () => {
+    deleteAbsence(currentStudent);
+
+    // Add hover effect to rows
+    const rows = document.querySelectorAll("#absences-table tr");
+    rows.forEach((row, index) => {
+        row.addEventListener("mouseenter", () => {
+            row.classList.add("selected");
+        });
+        row.addEventListener("mouseleave", () => {
+            row.classList.remove("selected");
+        });
+    });
+});
 
             renderStudents();
         });
@@ -285,6 +307,10 @@
         // Get the modal footer
         const modalFooter = document.querySelector(".modal-footer");
 
+        // Add event listeners for "Save" and "Cancel" buttons in the modal footer
+        const saveAbsenceButton = document.getElementById("save-absence-button");
+        const cancelAbsenceButton = document.getElementById("cancel-absence-button");
+        let editingRow = null;
 
         // Add absence to student
         function addAbsence(student) {
@@ -316,13 +342,10 @@
                 }
             });
 
-            // Show the "Save" button
-            const saveAbsenceButton = document.getElementById("save-absence-button");
+            // Show the "Save" and "Cancel" buttons in the modal footer
             saveAbsenceButton.style.display = "inline-block";
-
-            // Show the "Cancel" button
-            const cancelAbsenceButton = document.getElementById("cancel-absence-button");
             cancelAbsenceButton.style.display = "inline-block";
+
 
             saveAbsenceButton.addEventListener("click", () => {
                 // Save the new absence
@@ -372,6 +395,83 @@
                     });
                 
         }
+
+        // Implement the editAbsence function
+        function editAbsence(student, row, absence, index) {
+
+            row.innerHTML = `
+                <td><input type="date" class="form-control" value="${absence.date}"></td>
+                <td><input type="text" class="form-control" value="${absence.lessons}"></td>
+                <td>
+                <select class="form-select">
+                    <option value="abwesend" ${absence.status === "abwesend" ? "selected" : ""}>Abwesend</option>
+                    <option value="entschuldigt" ${absence.status === "entschuldigt" ? "selected" : ""}>Entschuldigt</option>
+                    <option value="unentschuldigt" ${absence.status === "unentschuldigt" ? "selected" : ""}>Unentschuldigt</option>
+                </select>
+                </td>
+                <td><input type="text" class="form-control" value="${absence.reason}"></td>
+            `;
+
+            // Hide the other buttons
+            modalFooter.querySelectorAll("button").forEach(button => {
+                if (button.id !== "save-absence-button") {
+                    button.style.display = "none";
+                }
+            });
+
+            // Show the "Save" and "Cancel" buttons
+            saveAbsenceButton.style.display = "inline-block";
+
+            // Update the editingRow variable
+            editingRow = row;
+
+            // Update event listeners for "Save" and "Cancel" buttons
+            saveAbsenceButton.onclick = () => {
+                const editedAbsence = {
+                date: row.querySelector("input[type='date']").value,
+                lessons: row.querySelector("input[type='text']").value,
+                status: row.querySelector("select").value,
+                reason: row.querySelectorAll("input[type='text']")[1].value,
+                };
+
+                student.absences[index] = editedAbsence;
+                filterAbsences(student); // Refresh the absences table
+
+                                        // Show the other buttons and hide the "Save" and "Cancel" buttons
+                                        modalFooter.querySelectorAll("button").forEach(button => {
+                            if (button.id !== "save-absence-button" && button.id !== "cancel-absence-button") {
+                                button.style.display = "inline-block";
+                            }
+                        });
+                        saveAbsenceButton.style.display = "none";
+                    };
+                
+            };
+
+        // Implement the deleteAbsence function
+        function deleteAbsence(student, index) {
+    // Remove the absence from the student's list
+    student.absences.splice(index, 1);
+
+    // Refresh the absences table
+    filterAbsences(student);
+
+    // Remove hover effect from all rows
+    const rows = document.querySelectorAll("#absences-table tr");
+    rows.forEach((row, index) => {
+        row.classList.remove("selected");
+        row.removeEventListener("mouseenter", hoverHandler);
+        row.removeEventListener("mouseleave", unhoverHandler);
+    });
+}
+
+function hoverHandler() {
+    this.classList.add("selected");
+}
+
+function unhoverHandler() {
+    this.classList.remove("selected");
+}
 
     </script>
 </body>
