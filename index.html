@@ -285,20 +285,10 @@
             });
 
             const deleteAbsenceButton = document.getElementById("delete-absence-button");
-deleteAbsenceButton.addEventListener("click", () => {
-    deleteAbsence(currentStudent);
-
-    // Add hover effect to rows
-    const rows = document.querySelectorAll("#absences-table tr");
-    rows.forEach((row, index) => {
-        row.addEventListener("mouseenter", () => {
-            row.classList.add("selected");
-        });
-        row.addEventListener("mouseleave", () => {
-            row.classList.remove("selected");
-        });
-    });
-});
+            deleteAbsenceButton.addEventListener("click", () => {
+            deleteAbsence(currentStudent);
+            console.log("Delete absence button clicked");
+            });
 
             renderStudents();
         });
@@ -447,30 +437,124 @@ deleteAbsenceButton.addEventListener("click", () => {
                 
             };
 
-        // Implement the deleteAbsence function
-        function deleteAbsence(student, index) {
-    // Remove the absence from the student's list
-    student.absences.splice(index, 1);
+        // Save the original absences in a variable
+        let originalAbsences = [];
 
-    // Refresh the absences table
-    filterAbsences(student);
+        function rowMouseEnter() {
+            this.classList.add("selected");
+        }
 
-    // Remove hover effect from all rows
-    const rows = document.querySelectorAll("#absences-table tr");
-    rows.forEach((row, index) => {
-        row.classList.remove("selected");
-        row.removeEventListener("mouseenter", hoverHandler);
-        row.removeEventListener("mouseleave", unhoverHandler);
-    });
-}
+        function rowMouseLeave() {
+            this.classList.remove("selected");
+        }
 
-function hoverHandler() {
-    this.classList.add("selected");
-}
+        function deleteAbsence(student) {
+            editMode = true;
 
-function unhoverHandler() {
-    this.classList.remove("selected");
-}
+            modalFooter.querySelectorAll("button").forEach(button => {
+                if (button.id !== "save-absence-button") {
+                    button.style.display = "none";
+                }
+            });
+
+            saveAbsenceButton.style.display = "inline-block";
+            cancelAbsenceButton.style.display = "inline-block";
+
+            originalAbsences = [...student.absences];
+            enableDeleteMode(student);
+        }
+
+        function enableDeleteMode(student) {
+            const rows = document.querySelectorAll("#absences-table tr");
+            rows.forEach((row, index) => {
+                row.addEventListener("mouseenter", () => {
+                    row.classList.add("selected");
+                });
+                row.addEventListener("mouseleave", () => {
+                    row.classList.remove("selected");
+                });
+
+                row.addEventListener("click", () => {
+                    if (editMode) {
+                        student.absences.splice(index, 1); // Delete the absence from student's absences array
+                        filterAbsences(student); // Refresh the absences table
+                        enableDeleteMode(student); // Enable deletion mode again
+                    }
+                });
+            });
+        }
+
+
+        saveAbsenceButton.onclick = () => {
+            disableDeleteMode();
+
+            saveAbsenceButton.style.display = "none";
+            cancelAbsenceButton.style.display = "none";
+
+            modalFooter.querySelectorAll("button").forEach(button => {
+                if (button.id !== "save-absence-button" && button.id !== "cancel-absence-button") {
+                    button.style.display = "inline-block";
+                }
+            });
+
+            editMode = false;
+        };
+
+        cancelAbsenceButton.onclick = () => {
+            disableDeleteMode();
+
+            saveAbsenceButton.style.display = "none";
+            cancelAbsenceButton.style.display = "none";
+
+            modalFooter.querySelectorAll("button").forEach(button => {
+                if (button.id !== "save-absence-button" && button.id !== "cancel-absence-button") {
+                    button.style.display = "inline-block";
+                }
+            });
+
+            selectedStudent.absences = [...originalAbsences];
+            filterAbsences(selectedStudent);
+
+            editMode = false;
+        };
+
+        function disableDeleteMode() {
+            const rows = document.querySelectorAll("#absences-table tr");
+            rows.forEach((row, index) => {
+                row.removeEventListener("mouseenter", () => {});
+                row.removeEventListener("mouseleave", () => {});
+                row.removeEventListener("click", () => {});
+                row.classList.remove("selected");
+            });
+        }
+
+
+        // Find the modal close button
+        const modalCloseButton = document.querySelector(".btn-close");
+
+        // Add an event listener to the modal close button
+        modalCloseButton.addEventListener("click", () => {
+            // Reset the buttons and disable delete/edit mode
+            resetButtons();
+            disableDeleteMode();
+            editMode = false;
+            console.log("Modal closed")
+        });
+
+        function resetButtons() {
+            // Hide the "Save" and "Cancel" buttons
+            saveAbsenceButton.style.display = "none";
+            cancelAbsenceButton.style.display = "none";
+
+            // Show the other buttons
+            modalFooter.querySelectorAll("button").forEach(button => {
+                if (button.id !== "save-absence-button" && button.id !== "cancel-absence-button") {
+                    button.style.display = "inline-block";
+                }
+            });
+        }
+
+
 
     </script>
 </body>
