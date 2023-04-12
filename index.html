@@ -223,6 +223,7 @@
             const absencesModal = new bootstrap.Modal(document.getElementById("absences-modal"));
             currentStudent = student;
             absencesModal.show();
+            console.log("Modal opened");
 
             const studentInfo = document.getElementById("student-info");
             studentInfo.innerHTML = `
@@ -553,6 +554,40 @@
                 }
             });
         }
+
+        function refreshStudentTable() {
+    studentTable.innerHTML = "";
+
+    students.forEach((student, index) => {
+        const newRow = document.createElement("tr");
+
+        newRow.innerHTML = `
+            <td>${student.name}</td>
+            <td>${student.absences.length}</td>
+            <td>${student.absences.length > 0 ? formatDate(student.absences[student.absences.length - 1].date) : "N/A"}</td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="editAbsence(students[${index}])">Bearbeiten</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteAbsence(students[${index}])">Löschen</button>
+            </td>
+        `;
+
+        studentTable.appendChild(newRow);
+    });
+}
+
+// Find the modal element
+const modalElement = document.getElementById("absence-modal");
+
+// Add an event listener for the 'hidden.bs.modal' event
+modalElement.addEventListener("hidden.bs.modal", () => {
+    // Reset the buttons and disable delete/edit mode
+    resetButtons();
+    disableDeleteMode();
+    editMode = false;
+    console.log("Modal closed")
+});
+
+
 
 
 
