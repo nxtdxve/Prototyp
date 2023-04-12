@@ -490,7 +490,6 @@
             disableDeleteMode();
 
             saveAbsenceButton.style.display = "none";
-            cancelAbsenceButton.style.display = "none";
 
             modalFooter.querySelectorAll("button").forEach(button => {
                 if (button.id !== "save-absence-button" && button.id !== "cancel-absence-button") {
@@ -545,7 +544,6 @@
         function resetButtons() {
             // Hide the "Save" and "Cancel" buttons
             saveAbsenceButton.style.display = "none";
-            cancelAbsenceButton.style.display = "none";
 
             // Show the other buttons
             modalFooter.querySelectorAll("button").forEach(button => {
